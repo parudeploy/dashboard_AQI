@@ -1,7 +1,6 @@
 # Import python packages
 import streamlit as st
 import pandas as pd
-
 import snowflake.snowpark as snowpark
 from snowflake.snowpark import Session
 
@@ -9,67 +8,86 @@ from snowflake.snowpark import Session
 st.title("AirQuality Trend- By State/City/Day Level")
 st.write("Use the dropdowns below to infer the air quality index data")
 
-# Get Session
+# Snowflake connection parameters
 connection_parameters = {
-       "ACCOUNT":"dx53793",
-       "region":"ap-southeast-1",
-        "USER":"marisnowflake",
-        "PASSWORD":"Kiki#2018",
-        "ROLE":"SYSADMIN",
-        "DATABASE":"dev_db",
-        "SCHEMA":"consumption_sch",
-        "WAREHOUSE":"reporting_wh"
-    }
+    "ACCOUNT": "dx53793",
+    "region": "ap-southeast-1",
+    "USER": "marisnowflake",
+    "PASSWORD": "Kiki#2018",
+    "ROLE": "SYSADMIN",
+    "DATABASE": "dev_db",
+    "SCHEMA": "consumption_sch",
+    "WAREHOUSE": "reporting_wh"
+}
+
+# Create Snowflake session
 session = Session.builder.configs(connection_parameters).create()
 
-# variables to hold the selection parameters, initiating as empty string
-state_option,city_option, date_option  = '','',''
+# Check if session is created
+if session:
+    st.write("Session created successfully!")
+else:
+    st.error("Failed to create a Snowflake session.")
 
-# query to get distinct states from agg_city_fact_hour_level table
+# Variables to hold the selection parameters
+state_option, city_option, date_option = '', '', ''
+
+# Query to get distinct states from agg_city_fact_hour_level table
 state_query = """
     select state from DEV_DB.CONSUMPTION_SCH.AVG_CITY_FACT_HOUR_LEVEL 
     group by state 
     order by 1 desc
 """
 
-# execute query using sql api and execute it by calling collect function.
-state_list = session.sql(state_query)
+# Execute query using sql api and collect results
+state_list = session.sql(state_query).collect()
 
-# use the selectbox api to render the states
-state_option = st.selectbox('Select State',state_list)
+# Extract states into a list for selectbox
+state_options = [state[0] for state in state_list]  # Convert to list of states
 
-#check the selection
-if (state_option is not None and len(state_option) > 1):
+# Use the selectbox api to render the states
+state_option = st.selectbox('Select State', state_options)
 
-    # query to get distinct cities from agg_city_fact_hour_level table
+# Check the selection
+if state_option:
+    # Query to get distinct cities from agg_city_fact_hour_level table
     city_query = f"""
     select city from DEV_DB.CONSUMPTION_SCH.AVG_CITY_FACT_HOUR_LEVEL 
-    where 
-    state = '{state_option}' group by city
+    where state = '{state_option}' 
+    group by city
     order by 1 desc
     """
-    # execute query using sql api and execute it by calling collect function.
-    city_list = session.sql(city_query)
+    
+    # Execute query using sql api and collect results
+    city_list = session.sql(city_query).collect()
 
-    # use the selectbox api to render the cities
-    city_option = st.selectbox('Select City',city_list)
+    # Extract cities into a list for selectbox
+    city_options = [city[0] for city in city_list]  # Convert to list of cities
 
-if (city_option is not None and len(city_option) > 1):
+    # Use the selectbox api to render the cities
+    city_option = st.selectbox('Select City', city_options)
+
+if city_option:
+    # Query to get distinct dates from the table
     date_query = f"""
         select date(measurement_time) as measurement_date 
-        from 
-        DEV_DB.CONSUMPTION_SCH.AVG_CITY_FACT_HOUR_LEVEL 
-        where 
-            state = '{state_option}' and
-            city = '{city_option}'
-        group by 
-        measurement_date
+        from DEV_DB.CONSUMPTION_SCH.AVG_CITY_FACT_HOUR_LEVEL 
+        where state = '{state_option}' and city = '{city_option}'
+        group by measurement_date
         order by 1 desc
     """
-    date_list = session.sql(date_query)
-    date_option = st.selectbox('Select Date',date_list)
+    
+    # Execute query using sql api and collect results
+    date_list = session.sql(date_query).collect()
 
-if (date_option is not None):
+    # Extract dates into a list for selectbox
+    date_options = [str(date[0]) for date in date_list]  # Convert to list of dates
+
+    # Use the selectbox api to render the dates
+    date_option = st.selectbox('Select Date', date_options)
+
+if date_option:
+    # Query to get hourly trend data for the selected date
     trend_sql = f"""
     select 
         hour(measurement_time) as Hour,
@@ -80,34 +98,31 @@ if (date_option is not None):
         NH3_AVG,
         CO_AVG,
         O3_AVG
-    from 
-        dev_db.consumption_sch.avg_city_fact_hour_level
-    where 
-        state = '{state_option}' and
-        city = '{city_option}' and 
-        date(measurement_time) = '{date_option}'
+    from dev_db.consumption_sch.avg_city_fact_hour_level
+    where state = '{state_option}' and city = '{city_option}' and date(measurement_time) = '{date_option}'
     order by measurement_time
     """
+    
+    # Execute query using sql api and collect results
     sf_df = session.sql(trend_sql).collect()
 
-    # create panda's dataframe
-    pd_df =pd.DataFrame(
+    # Create pandas dataframe from the Snowflake results
+    pd_df = pd.DataFrame(
         sf_df,
-        columns=['Hour','PM2.5','PM10','SO3','CO','NO2','NH3','O3'])
-    
-    #draw charts
-    st.bar_chart(pd_df,x='Hour')
-    
+        columns=['Hour', 'PM2.5', 'PM10', 'SO2', 'NO2', 'NH3', 'CO', 'O3']
+    )
+
+    # Display the bar chart
+    st.bar_chart(pd_df.set_index('Hour'))
+
     st.divider()
-    
 
-
-    # histogram using Matplotlib
+    # Optional: You can use a histogram for CO levels (if desired)
     # st.subheader("Histogram for CO Levels")
     # pt.figure(figsize=(10, 6))
-    # pt.hist(pd_df['CO'], bins=10, color='red', edgecolor='black', alpha=0.7,orientation='horizontal')
+    # pt.hist(pd_df['CO'], bins=10, color='red', edgecolor='black', alpha=0.7, orientation='horizontal')
     # pt.title('Distribution of CO Levels')
     # pt.xlabel('Frequency')
     # pt.ylabel('CO')
-    # pt.xticks(range(24)) 
+    # pt.xticks(range(24))
     # st.pyplot(pt)
