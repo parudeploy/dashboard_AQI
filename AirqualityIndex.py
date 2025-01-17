@@ -117,12 +117,13 @@ if date_option:
 
     st.divider()
 
+    
     # Optional: You can use a histogram for CO levels (if desired)
-    # st.subheader("Histogram for CO Levels")
-    # pt.figure(figsize=(10, 6))
-    # pt.hist(pd_df['CO'], bins=10, color='red', edgecolor='black', alpha=0.7, orientation='horizontal')
-    # pt.title('Distribution of CO Levels')
-    # pt.xlabel('Frequency')
-    # pt.ylabel('CO')
-    # pt.xticks(range(24))
-    # st.pyplot(pt)
+     st.subheader("Histogram for CO Levels")
+     pt.figure(figsize=(10, 6))
+     pt.hist(pd_df['CO'], bins=10, color='red', edgecolor='black', alpha=0.7, orientation='horizontal')
+     pt.title('Distribution of CO Levels')
+     pt.xlabel('Frequency')
+     pt.ylabel('CO')
+     pt.xticks(range(24))
+     st.pyplot(pt)
