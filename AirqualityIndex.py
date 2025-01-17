@@ -2,6 +2,7 @@
 import streamlit as st
 import pandas as pd
 
+import snowflake.snowpark as snowpark
 from snowflake.snowpark import Session
 
 # Page Title
