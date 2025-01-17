@@ -2,15 +2,24 @@
 import streamlit as st
 import pandas as pd
 
-
-from snowflake.snowpark.context import get_active_session
+from snowflake.snowpark import Session
 
 # Page Title
 st.title("AirQuality Trend- By State/City/Day Level")
 st.write("Use the dropdowns below to infer the air quality index data")
 
 # Get Session
-session = get_active_session()
+connection_parameters = {
+       "ACCOUNT":"dx53793",
+       "region":"ap-southeast-1",
+        "USER":"marisnowflake",
+        "PASSWORD":"Kiki#2018",
+        "ROLE":"SYSADMIN",
+        "DATABASE":"dev_db",
+        "SCHEMA":"consumption_sch",
+        "WAREHOUSE":"reporting_wh"
+    }
+session = Session.builder.configs(connection_parameters).create()
 
 # variables to hold the selection parameters, initiating as empty string
 state_option,city_option, date_option  = '','',''
