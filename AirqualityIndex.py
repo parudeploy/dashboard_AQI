@@ -6,7 +6,7 @@ from snowflake.snowpark import Session
 
 # Page Title
 st.title("AirQuality Trend- By State/City/Day Level")
-st.write("Use the dropdowns below to infer the air quality index data")
+st.write("Use the dropdowns below to infer the air quality index data.Certain districts may not have pollutants data on certain dates.")
 
 # Snowflake connection parameters
 connection_parameters = {
