@@ -82,7 +82,7 @@ if city_option:
 
     # Extract dates into a list for selectbox
     # date_options = [str(date[0]) for date in date_list]  # Convert to list of dates
-     predefined_dates = [
+    predefined_dates = [
         "01-03-2024", "02-03-2024", "03-03-2024", 
         "04-03-2024", "05-03-2024"
     ]
