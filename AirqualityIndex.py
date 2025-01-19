@@ -81,14 +81,10 @@ if city_option:
     date_list = session.sql(date_query).collect()
 
     # Extract dates into a list for selectbox
-    # date_options = [str(date[0]) for date in date_list]  # Convert to list of dates
-    predefined_dates = [
-        "01-03-2024", "02-03-2024", "03-03-2024", 
-        "04-03-2024", "05-03-2024"
-    ]
-
+    date_options = [str(date[0]) for date in date_list]  # Convert to list of dates
+    
     # Use the selectbox api to render the dates
-    date_option = st.selectbox('Select Date', predefined_dates)
+    date_option = st.selectbox('Select Date', date_options)
 
 if date_option:
     # Query to get hourly trend data for the selected date
