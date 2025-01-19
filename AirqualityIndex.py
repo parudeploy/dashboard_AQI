@@ -6,7 +6,7 @@ from snowflake.snowpark import Session
 
 # Page Title
 st.title("AirQuality Trend- By State/City/Day Level")
-st.write("Use the dropdowns below to infer the air quality index data.Certain districts may not have pollutants data on certain dates.")
+st.write("Use the dropdowns below to infer the air quality index data. Certain districts may not have pollutants data on certain dates.")
 
 # Snowflake connection parameters
 connection_parameters = {
@@ -68,25 +68,23 @@ if state_option:
     city_option = st.selectbox('Select City', city_options)
 
 if city_option:
-    # Query to get distinct dates from the table
-    date_query = f"""
-        select date(measurement_time) as measurement_date 
-        from DEV_DB.CONSUMPTION_SCH.AVG_CITY_FACT_HOUR_LEVEL 
-        where state = '{state_option}' and city = '{city_option}'
-        group by measurement_date
-        order by 1 desc
-    """
+    # Use predefined dates list instead of querying the Snowflake database
+    predefined_dates = [
+        "01-03-2024", "02-03-2024", "03-03-2024", 
+        "04-03-2024", "05-03-2024"
+    ]
     
-    # Execute query using sql api and collect results
-    date_list = session.sql(date_query).collect()
-
-    # Extract dates into a list for selectbox
-    date_options = [str(date[0]) for date in date_list]  # Convert to list of dates
-    
-    # Use the selectbox api to render the dates
-    date_option = st.selectbox('Select Date', date_options)
+    # Use the selectbox API to render the dates from the predefined list
+    date_option = st.selectbox('Select Date', predefined_dates)
 
 if date_option:
+    # Convert date_option from dd-mm-yyyy to yyyy-mm-dd format
+    from datetime import datetime
+    
+    # Convert the selected date to the correct format
+    date_obj = datetime.strptime(date_option, "%d-%m-%Y")
+    formatted_date = date_obj.strftime("%Y-%m-%d")  # Format it to yyyy-mm-dd
+
     # Query to get hourly trend data for the selected date
     trend_sql = f"""
     select 
@@ -99,7 +97,7 @@ if date_option:
         CO_AVG,
         O3_AVG
     from dev_db.consumption_sch.avg_city_fact_hour_level
-    where state = '{state_option}' and city = '{city_option}' and date(measurement_time) = '{date_option}'
+    where state = '{state_option}' and city = '{city_option}' and date(measurement_time) = '{formatted_date}'
     order by measurement_time
     """
     
