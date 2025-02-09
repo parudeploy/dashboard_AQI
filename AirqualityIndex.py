@@ -10,9 +10,9 @@ st.write("Use the dropdowns below to infer the air quality index data. Certain d
 
 # Snowflake connection parameters
 connection_parameters = {
-    "ACCOUNT": "dx53793",
-    "region": "ap-southeast-1",
-    "USER": "marisnowflake",
+    "ACCOUNT": "zyb38897",
+    "region": "us-west-2",
+    "USER": "parubits",
     "PASSWORD": "Kiki#2018",
     "ROLE": "SYSADMIN",
     "DATABASE": "dev_db",
